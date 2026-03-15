@@ -1,114 +1,68 @@
 ---
-import { Image } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import BaseHead from '../../components/BaseHead.astro';
 import Footer from '../../components/Footer.astro';
-import FormattedDate from '../../components/FormattedDate.astro';
 import Header from '../../components/Header.astro';
-import { SITE_DESCRIPTION, SITE_TITLE } from '../../consts';
 
-const posts = (await getCollection('blog')).sort(
-	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
-);
+const posts = (await getCollection('blog'))
+  .filter((p) => !p.data.draft)
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+const categories = Array.from(new Set(posts.map((p) => p.data.category)));
 ---
 
 <!doctype html>
-<html lang="en">
-	<head>
-		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
-		<style>
-			main {
-				width: 960px;
-			}
-			ul {
-				display: flex;
-				flex-wrap: wrap;
-				gap: 2rem;
-				list-style-type: none;
-				margin: 0;
-				padding: 0;
-			}
-			ul li {
-				width: calc(50% - 1rem);
-			}
-			ul li * {
-				text-decoration: none;
-				transition: 0.2s ease;
-			}
-			ul li:first-child {
-				width: 100%;
-				margin-bottom: 1rem;
-				text-align: center;
-			}
-			ul li:first-child img {
-				width: 100%;
-			}
-			ul li:first-child .title {
-				font-size: 2.369rem;
-			}
-			ul li img {
-				margin-bottom: 0.5rem;
-				border-radius: 12px;
-			}
-			ul li a {
-				display: block;
-			}
-			.title {
-				margin: 0;
-				color: rgb(var(--black));
-				line-height: 1;
-			}
-			.date {
-				margin: 0;
-				color: rgb(var(--gray));
-			}
-			ul li a:hover h4,
-			ul li a:hover .date {
-				color: rgb(var(--accent));
-			}
-			ul a:hover img {
-				box-shadow: var(--box-shadow);
-			}
-			@media (max-width: 720px) {
-				ul {
-					gap: 0.5em;
-				}
-				ul li {
-					width: 100%;
-					text-align: center;
-				}
-				ul li:first-child {
-					margin-bottom: 0;
-				}
-				ul li:first-child .title {
-					font-size: 1.563em;
-				}
-			}
-		</style>
-	</head>
-	<body>
-		<Header />
-		<main>
-			<section>
-				<ul>
-					{
-						posts.map((post) => (
-							<li>
-								<a href={`/blog/${post.id}/`}>
-									{post.data.heroImage && (
-										<Image width={720} height={360} src={post.data.heroImage} alt="" />
-									)}
-									<h4 class="title">{post.data.title}</h4>
-									<p class="date">
-										<FormattedDate date={post.data.pubDate} />
-									</p>
-								</a>
-							</li>
-						))
-					}
-				</ul>
-			</section>
-		</main>
-		<Footer />
-	</body>
+<html lang="zh-CN">
+  <head>
+    <BaseHead title="文章列表" description="全部文章" />
+  </head>
+  <body>
+    <Header />
+    <main>
+      <h1>文章</h1>
+      <input class="search" id="search" placeholder="搜索标题 / 标签 / 分类..." />
+      <div style="margin:.8rem 0 1rem;display:flex;gap:.4rem;flex-wrap:wrap;">
+        {categories.map((c) => <button class="badge filter" data-cat={c}>{c}</button>)}
+        <button class="badge filter" data-cat="all">全部</button>
+      </div>
+
+      <section id="list" class="grid">
+        {
+          posts.map((post) => (
+            <article class="card" data-title={post.data.title} data-tags={(post.data.tags || []).join(' ')} data-cat={post.data.category}>
+              <div class="meta">{post.data.category} · {post.data.pubDate.toLocaleDateString('zh-CN')}</div>
+              <h3 style="margin-top:.35rem;"><a href={`/blog/${post.id}/`}>{post.data.title}</a></h3>
+              <p>{post.data.description}</p>
+            </article>
+          ))
+        }
+      </section>
+
+      <script>
+        const search = document.getElementById('search');
+        const items = [...document.querySelectorAll('#list article')];
+        const filters = [...document.querySelectorAll('.filter')];
+        let activeCat = 'all';
+
+        const run = () => {
+          const q = (search?.value || '').toLowerCase().trim();
+          for (const it of items) {
+            const t = (it.dataset.title + ' ' + it.dataset.tags + ' ' + it.dataset.cat).toLowerCase();
+            const okQ = !q || t.includes(q);
+            const okC = activeCat === 'all' || it.dataset.cat === activeCat;
+            it.style.display = okQ && okC ? '' : 'none';
+          }
+        };
+
+        search?.addEventListener('input', run);
+        filters.forEach((btn) => {
+          btn.addEventListener('click', () => {
+            activeCat = btn.dataset.cat || 'all';
+            run();
+          });
+        });
+      </script>
+    </main>
+    <Footer />
+  </body>
 </html>
