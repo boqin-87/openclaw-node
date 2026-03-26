@@ -1,0 +1,37 @@
+---
+const repo = import.meta.env.PUBLIC_GISCUS_REPO;
+const repoId = import.meta.env.PUBLIC_GISCUS_REPO_ID;
+const category = import.meta.env.PUBLIC_GISCUS_CATEGORY ?? 'General';
+const categoryId = import.meta.env.PUBLIC_GISCUS_CATEGORY_ID;
+const mapping = import.meta.env.PUBLIC_GISCUS_MAPPING ?? 'pathname';
+const theme = import.meta.env.PUBLIC_GISCUS_THEME ?? 'dark_dimmed';
+const lang = import.meta.env.PUBLIC_GISCUS_LANG ?? 'zh-CN';
+
+const enabled = Boolean(repo && repoId && categoryId);
+---
+
+<section class="comments card" style="margin-top: 2rem;">
+	<h3 style="margin-bottom: .75rem;">评论</h3>
+	{
+		enabled ? (
+			<script
+				src="https://giscus.app/client.js"
+				data-repo={repo}
+				data-repo-id={repoId}
+				data-category={category}
+				data-category-id={categoryId}
+				data-mapping={mapping}
+				data-strict="0"
+				data-reactions-enabled="1"
+				data-emit-metadata="0"
+				data-input-position="top"
+				data-theme={theme}
+				data-lang={lang}
+				crossorigin="anonymous"
+				async
+			/>
+		) : (
+			<p class="meta">评论系统未启用。请先在 <code>.env</code> 中配置 Giscus 参数。</p>
+		)
+	}
+</section>

@@ -1,14 +1,62 @@
 ---
-import { getCollection } from 'astro:content';
 import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 
-const posts = (await getCollection('blog'))
-  .filter((p) => !p.data.draft)
-  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-  .slice(0, 6);
+const cloudSections = [
+  {
+    title: 'Oracle Cloud（甲骨文）',
+    desc: '我的 VPS 起点，永久免费方案非常适合新手入门。',
+    href: '/blog',
+  },
+  {
+    title: 'AWS（亚马逊云）',
+    desc: '全球化云服务体验完整，免费层也能做很多实战项目。',
+    href: '/blog',
+  },
+  {
+    title: 'Azure（微软云）',
+    desc: '教育场景资源丰富，适合学习云原生和企业级部署。',
+    href: '/blog',
+  },
+];
+
+const learnSections = [
+  {
+    icon: '🐧',
+    title: 'Linux 入门',
+    desc: 'SSH、系统选择、常用命令、监控、安全与优化。',
+    href: '/blog',
+  },
+  {
+    icon: '🌐',
+    title: '建站学习',
+    desc: '域名解析、博客搭建、站点安全与性能优化。',
+    href: '/blog',
+  },
+  {
+    icon: '🐳',
+    title: 'Docker 学习',
+    desc: '从镜像与容器到生产部署，逐步掌握容器化。',
+    href: '/blog',
+  },
+  {
+    icon: '☸️',
+    title: 'K8S 学习',
+    desc: '从集群部署到服务编排，迈向生产级运维。',
+    href: '/blog',
+  },
+];
+
+const timeline = [
+  { year: '2021', text: '起步：进入 VPS 领域，开始系统分享基础教程。' },
+  { year: '2022', text: '积累：形成稳定内容体系，完善网站与频道矩阵。' },
+  { year: '2023', text: '突破：发布自动化脚本与工具站，效率显著提升。' },
+  { year: '2024', text: '进阶：深入 Docker / K8S，聚焦生产实践。' },
+  { year: '2025', text: '拓展：形成工具生态，社区持续增长。' },
+  { year: '2026', text: '未来：拥抱 AI 与自动化，持续迭代内容形态。' },
+];
 ---
 
 <!doctype html>
@@ -19,27 +67,161 @@ const posts = (await getCollection('blog'))
   <body>
     <Header />
     <main>
-      <section class="card" style="padding:1.4rem 1.2rem;">
-        <span class="badge">技术博客</span>
-        <h1 style="margin-top:.6rem;">像 kejilion 一样简洁的个人博客</h1>
-        <p>聚焦网络折腾、OpenWrt、代理配置、效率工具与开发实践。内容可直接用 Markdown 维护。</p>
+      <section class="hero card">
+        <div class="lion">🦁</div>
+        <h1>科技分享 · 极致白嫖</h1>
+        <p>
+          专注 VPS 评测、Linux 运维、Docker 容器化与建站教程。
+          从零基础到生产实战，用最低成本搭建属于你的云端世界。
+        </p>
       </section>
 
-      <section style="margin-top:1rem;" class="grid">
-        {
-          posts.map((post) => (
-            <article class="card">
-              <div class="meta">{post.data.category} · {post.data.pubDate.toLocaleDateString('zh-CN')}</div>
-              <h3 style="margin-top:.35rem;"><a href={`/blog/${post.id}/`}>{post.data.title}</a></h3>
-              <p>{post.data.description}</p>
-              <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
-                {post.data.tags?.map((tag) => <span class="badge">#{tag}</span>)}
-              </div>
-            </article>
-          ))
-        }
+      <section class="section">
+        <h2>云平台专题</h2>
+        <div class="cards three">
+          {
+            cloudSections.map((item) => (
+              <article class="card topic">
+                <h3>{item.title}</h3>
+                <p>{item.desc}</p>
+                <a href={item.href}>查看内容 →</a>
+              </article>
+            ))
+          }
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>学习路线</h2>
+        <div class="cards four">
+          {
+            learnSections.map((item) => (
+              <article class="card topic">
+                <div class="icon">{item.icon}</div>
+                <h3>{item.title}</h3>
+                <p>{item.desc}</p>
+                <a href={item.href}>阅读教程 →</a>
+              </article>
+            ))
+          }
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="command card">
+          <code>bash &lt;(curl -sL kejilion.sh)</code>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>成长时间线</h2>
+        <div class="timeline">
+          {
+            timeline.map((item) => (
+              <article class="card time-item">
+                <div class="year">{item.year}</div>
+                <p>{item.text}</p>
+              </article>
+            ))
+          }
+        </div>
       </section>
     </main>
     <Footer />
   </body>
 </html>
+
+<style>
+  .hero {
+    text-align: center;
+    padding: 2.2rem 1.4rem;
+  }
+  .lion {
+    font-size: 3rem;
+    margin-bottom: .3rem;
+  }
+  .hero h1 {
+    margin-bottom: .7rem;
+    font-size: clamp(1.8rem, 3.2vw, 2.5rem);
+  }
+  .hero p {
+    max-width: 760px;
+    margin: 0 auto;
+    color: var(--muted);
+  }
+  .section {
+    margin-top: 1.1rem;
+  }
+  .section h2 {
+    margin: .3rem 0 .8rem;
+    font-size: 1.2rem;
+  }
+  .cards {
+    display: grid;
+    gap: 1rem;
+  }
+  .cards.three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .cards.four {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .topic h3 {
+    margin-bottom: .5rem;
+    font-size: 1rem;
+  }
+  .topic p {
+    color: var(--muted);
+    font-size: .95rem;
+    min-height: 52px;
+  }
+  .icon {
+    font-size: 1.5rem;
+    margin-bottom: .5rem;
+  }
+  .command {
+    text-align: center;
+    padding: 1rem;
+  }
+  .command code {
+    display: inline-block;
+    font-size: 1rem;
+    color: #e5edff;
+    background: #0c1425;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: .65rem .85rem;
+  }
+  .timeline {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .9rem;
+  }
+  .time-item {
+    position: relative;
+  }
+  .year {
+    color: #89a2ff;
+    font-weight: 700;
+    margin-bottom: .35rem;
+  }
+  .time-item p {
+    margin: 0;
+    color: var(--muted);
+  }
+
+  @media (max-width: 980px) {
+    .cards.three,
+    .cards.four,
+    .timeline {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  @media (max-width: 680px) {
+    .cards.three,
+    .cards.four,
+    .timeline {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

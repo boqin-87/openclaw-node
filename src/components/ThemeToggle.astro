@@ -1,0 +1,33 @@
+<button id="theme-toggle" aria-label="切换主题" class="theme-toggle" type="button">🌙</button>
+
+<script>
+  const btn = document.getElementById('theme-toggle');
+  const root = document.documentElement;
+
+  const getTheme = () => root.dataset.theme || 'light';
+  const syncIcon = () => {
+    if (!btn) return;
+    btn.textContent = getTheme() === 'dark' ? '☀️' : '🌙';
+  };
+
+  btn?.addEventListener('click', () => {
+    const next = getTheme() === 'dark' ? 'light' : 'dark';
+    root.dataset.theme = next;
+    localStorage.setItem('theme', next);
+    syncIcon();
+  });
+
+  syncIcon();
+</script>
+
+<style>
+  .theme-toggle {
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--fg);
+    border-radius: 10px;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+  }
+</style>
