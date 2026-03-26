@@ -2,15 +2,16 @@
 import { SITE_TITLE } from '../consts';
 import HeaderLink from './HeaderLink.astro';
 import ThemeToggle from './ThemeToggle.astro';
+import navData from '../data/navLinks.json';
 ---
 
 <header class="site-header">
 	<nav class="nav container">
 		<a class="brand" href="/">{SITE_TITLE}</a>
 		<div class="links">
-			<HeaderLink href="/">首页</HeaderLink>
-			<HeaderLink href="/blog">文章</HeaderLink>
-			<HeaderLink href="/about">关于</HeaderLink>
+			{navData.links.map((link) => (
+				<HeaderLink href={link.href}>{link.icon} {link.label}</HeaderLink>
+			))}
 			<ThemeToggle />
 		</div>
 	</nav>

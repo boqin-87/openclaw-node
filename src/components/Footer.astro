@@ -1,11 +1,19 @@
 ---
 import { SITE_AUTHOR } from '../consts';
+import siteConfig from '../data/siteConfig.json';
 const today = new Date();
 ---
 
 <footer class="footer">
 	<div class="container inner">
-		<p>© {today.getFullYear()} {SITE_AUTHOR}. Built with Astro.</p>
+		<div class="footer-content">
+			<p>© {today.getFullYear()} {SITE_AUTHOR}. Built with Astro.</p>
+			<div class="social-links">
+				{siteConfig.github && <a href={siteConfig.github} target="_blank">GitHub</a>}
+				{siteConfig.twitter && <a href={siteConfig.twitter} target="_blank">Twitter/X</a>}
+				{siteConfig.email && <a href={`mailto:${siteConfig.email}`}>Email</a>}
+			</div>
+		</div>
 	</div>
 </footer>
 
@@ -18,5 +26,24 @@ const today = new Date();
 		padding: 1.2rem 0 2rem;
 		color: var(--muted);
 		font-size: 0.92rem;
+	}
+	.footer-content {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 1rem;
+	}
+	.social-links {
+		display: flex;
+		gap: 1rem;
+	}
+	.social-links a {
+		color: var(--muted);
+		text-decoration: none;
+		transition: color 0.2s;
+	}
+	.social-links a:hover {
+		color: var(--primary-color);
 	}
 </style>

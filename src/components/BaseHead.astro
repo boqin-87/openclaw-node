@@ -15,10 +15,17 @@ interface Props {
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
 const { title, description, image = FallbackImage } = Astro.props;
+import siteConfig from '../data/siteConfig.json';
 ---
 
 <!-- Global Metadata -->
 <meta charset="utf-8" />
+<style is:inline define:vars={{ p: siteConfig.theme?.primaryColor || '#2563eb', a: siteConfig.theme?.accentColor || '#7c3aed' }}>
+  :root {
+    --brand: var(--p) !important;
+    --brand-2: var(--a) !important;
+  }
+</style>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <meta name="color-scheme" content="light dark" />
 <script is:inline>
