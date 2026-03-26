@@ -1,0 +1,461 @@
+---
+// Admin Settings Panel - 博客后台管理中心 (静态版)
+// 访问地址: /admin
+// 提供站点配置、主题、导航、社交链接的可视化管理
+---
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>博客管理后台</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #f0f2f5; color: #333; min-height: 100vh; }
+    .topbar { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; padding: 1.2rem 2rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(79,70,229,0.3); }
+    .topbar h1 { font-size: 1.3rem; font-weight: 800; display: flex; align-items: center; gap: 0.5rem; }
+    .topbar a { color: rgba(255,255,255,0.85); text-decoration: none; font-size: 0.9rem; background: rgba(255,255,255,0.15); padding: 0.4rem 0.9rem; border-radius: 8px; transition: background 0.15s; }
+    .topbar a:hover { background: rgba(255,255,255,0.25); }
+    .container { max-width: 1000px; margin: 2rem auto; padding: 0 1.5rem; }
+    .tabs { display: flex; gap: 0.4rem; background: white; padding: 0.5rem; border-radius: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .tab { padding: 0.6rem 1.2rem; border-radius: 10px; border: none; background: none; cursor: pointer; font-size: 0.92rem; font-weight: 600; color: #666; transition: all 0.15s; display: flex; align-items: center; gap: 0.4rem; }
+    .tab:hover { background: #f5f5f5; color: #4f46e5; }
+    .tab.active { background: #4f46e5; color: white; box-shadow: 0 2px 8px rgba(79,70,229,0.35); }
+    .panel { background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 1px 4px rgba(0,0,0,0.06); display: none; }
+    .panel.active { display: block; }
+    .panel-header { margin-bottom: 1.5rem; }
+    .panel-header h2 { font-size: 1.15rem; font-weight: 800; color: #1a1a2e; margin-bottom: 0.3rem; }
+    .panel-header p { font-size: 0.85rem; color: #888; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-group label { font-size: 0.82rem; font-weight: 700; color: #555; letter-spacing: 0.02em; }
+    .form-group input, .form-group textarea, .form-group select { padding: 0.65rem 0.85rem; border: 1.5px solid #e5e7eb; border-radius: 10px; font-size: 0.95rem; transition: border-color 0.15s, box-shadow 0.15s; font-family: inherit; background: #fafafa; }
+    .form-group input:focus, .form-group textarea:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.1); background: white; }
+    .form-group textarea { resize: vertical; min-height: 90px; }
+    .color-row { display: flex; align-items: center; gap: 0.7rem; }
+    .color-row input[type="color"] { width: 46px; height: 40px; border-radius: 10px; border: 1.5px solid #e5e7eb; cursor: pointer; padding: 2px; flex-shrink: 0; }
+    .color-row input[type="text"] { font-family: monospace; }
+    .preview-box { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 1.2rem; margin-top: 1rem; }
+    .preview-label { font-size: 0.78rem; font-weight: 700; color: #94a3b8; margin-bottom: 0.6rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .preview-nav { display: flex; gap: 1rem; align-items: center; padding-bottom: 0.8rem; border-bottom: 1px solid #e2e8f0; margin-bottom: 0.8rem; }
+    .preview-brand { font-weight: 800; font-size: 1rem; }
+    .preview-links { display: flex; gap: 0.8rem; }
+    .preview-link { font-size: 0.85rem; color: #4f46e5; cursor: default; }
+    .preview-hero { height: 60px; background: linear-gradient(135deg, var(--p, #4f46e5), var(--a, #7c3aed)); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.1rem; }
+    .nav-editor { border: 1.5px solid #e5e7eb; border-radius: 12px; overflow: hidden; }
+    .nav-row { display: grid; grid-template-columns: 60px 1fr 1fr 50px; gap: 0.5rem; padding: 0.7rem 1rem; align-items: center; border-bottom: 1px solid #f0f0f0; }
+    .nav-row:last-child { border-bottom: none; }
+    .nav-row input { padding: 0.45rem 0.6rem; border: 1px solid #e5e7eb; border-radius: 7px; font-size: 0.9rem; background: #fafafa; }
+    .nav-row input:focus { outline: none; border-color: #4f46e5; background: white; }
+    .del-btn { background: none; border: none; cursor: pointer; font-size: 1.3rem; color: #d1d5db; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+    .del-btn:hover { color: #ef4444; background: #fef2f2; }
+    .add-row-btn { width: 100%; padding: 0.7rem; background: none; border: 2px dashed #e5e7eb; border-radius: 10px; cursor: pointer; color: #9ca3af; font-size: 0.9rem; font-weight: 600; margin-top: 0.6rem; transition: all 0.15s; }
+    .add-row-btn:hover { border-color: #4f46e5; color: #4f46e5; background: #fafaff; }
+    .actions { display: flex; gap: 0.8rem; margin-top: 1.8rem; flex-wrap: wrap; }
+    .btn { padding: 0.7rem 1.5rem; border-radius: 10px; border: none; cursor: pointer; font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 0.4rem; transition: all 0.15s; }
+    .btn-primary { background: #4f46e5; color: white; }
+    .btn-primary:hover { background: #4338ca; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79,70,229,0.35); }
+    .btn-secondary { background: #f3f4f6; color: #374151; }
+    .btn-secondary:hover { background: #e5e7eb; }
+    .btn-git { background: #24292e; color: white; }
+    .btn-git:hover { background: #1a1f24; }
+    .info-card { background: linear-gradient(135deg, #eff6ff, #f5f3ff); border: 1px solid #c7d2fe; border-radius: 12px; padding: 1.2rem 1.5rem; font-size: 0.88rem; color: #4338ca; line-height: 1.7; }
+    .info-card strong { font-weight: 800; }
+    .info-card code { background: rgba(79,70,229,0.1); padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.85em; }
+    .diff-view { background: #1e1e2e; color: #cdd6f4; border-radius: 12px; padding: 1.2rem; font-family: monospace; font-size: 0.85rem; line-height: 1.7; white-space: pre-wrap; overflow-x: auto; margin-top: 1rem; max-height: 400px; overflow-y: auto; }
+    .toast { position: fixed; bottom: 2rem; right: 2rem; background: #16a34a; color: white; padding: 0.9rem 1.5rem; border-radius: 12px; font-size: 0.95rem; font-weight: 700; box-shadow: 0 6px 20px rgba(0,0,0,0.2); opacity: 0; transform: translateY(20px); transition: all 0.3s; pointer-events: none; z-index: 9999; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.warn { background: #d97706; }
+    @media (max-width: 680px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .nav-row { grid-template-columns: 50px 1fr 1fr 44px; }
+      .topbar { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>🛠️ 博客管理后台</h1>
+  <a href="/" target="_blank">← 返回博客首页</a>
+</div>
+
+<div class="container">
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab(this, 'general')">⚙️ 基础设置</button>
+    <button class="tab" onclick="switchTab(this, 'appearance')">🎨 外观主题</button>
+    <button class="tab" onclick="switchTab(this, 'nav')">🔗 导航菜单</button>
+    <button class="tab" onclick="switchTab(this, 'social')">🔗 社交链接</button>
+    <button class="tab" onclick="switchTab(this, 'posts')">📝 文章管理</button>
+    <button class="tab" onclick="switchTab(this, 'deploy')">🚀 部署状态</button>
+  </div>
+
+  <!-- ① 基础设置 -->
+  <div class="panel active" id="panel-general">
+    <div class="panel-header">
+      <h2>⚙️ 基础信息</h2>
+      <p>修改网站标题、描述、作者等元信息，这些内容会显示在浏览器标签页和分享卡片上。</p>
+    </div>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label>网站标题</label>
+        <input type="text" id="f-title" placeholder="白小 · 技术杂记" />
+      </div>
+      <div class="form-group full">
+        <label>网站描述（SEO description）</label>
+        <textarea id="f-desc" placeholder="一句话描述你的网站"></textarea>
+      </div>
+      <div class="form-group">
+        <label>作者名称</label>
+        <input type="text" id="f-author" />
+      </div>
+      <div class="form-group">
+        <label>网站地址</label>
+        <input type="text" id="f-url" placeholder="https://yourdomain.com" />
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="saveAll()">💾 保存并生成更新指令</button>
+      <button class="btn btn-secondary" onclick="loadAll()">↺ 重置当前表单</button>
+    </div>
+  </div>
+
+  <!-- ② 外观主题 -->
+  <div class="panel" id="panel-appearance">
+    <div class="panel-header">
+      <h2>🎨 外观主题</h2>
+      <p>调整网站的主色调和强调色，实时预览效果。</p>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>主色调</label>
+        <div class="color-row">
+          <input type="color" id="f-primary" value="#4f46e5" oninput="syncColor('primary')" />
+          <input type="text" id="f-primary-text" value="#4f46e5" placeholder="#4f46e5" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>强调色</label>
+        <div class="color-row">
+          <input type="color" id="f-accent" value="#f59e0b" oninput="syncColor('accent')" />
+          <input type="text" id="f-accent-text" value="#f59e0b" placeholder="#f59e0b" />
+        </div>
+      </div>
+    </div>
+    <div class="preview-box">
+      <div class="preview-label">🎯 颜色预览</div>
+      <div class="preview-nav">
+        <span class="preview-brand" id="prev-title">白小 · 技术杂记</span>
+        <div class="preview-links">
+          <span class="preview-link">首页</span>
+          <span class="preview-link">文章</span>
+          <span class="preview-link">关于</span>
+        </div>
+      </div>
+      <div class="preview-hero" id="prev-hero">🎨 颜色主题预览</div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="saveAll()">💾 保存并生成更新指令</button>
+    </div>
+  </div>
+
+  <!-- ③ 导航菜单 -->
+  <div class="panel" id="panel-nav">
+    <div class="panel-header">
+      <h2>🔗 导航菜单</h2>
+      <p>管理顶部导航栏的链接，可以添加 Emoji 图标。</p>
+    </div>
+    <div class="nav-editor" id="nav-editor"></div>
+    <button class="add-row-btn" onclick="addNavRow()">＋ 添加导航项</button>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="saveNav()">💾 保存并生成更新指令</button>
+    </div>
+  </div>
+
+  <!-- ④ 社交链接 -->
+  <div class="panel" id="panel-social">
+    <div class="panel-header">
+      <h2>🔗 社交链接</h2>
+      <p>配置显示在页脚的社交媒体链接。</p>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>GitHub</label>
+        <input type="text" id="f-github" placeholder="https://github.com/你的用户名" />
+      </div>
+      <div class="form-group">
+        <label>Twitter / X</label>
+        <input type="text" id="f-twitter" placeholder="https://x.com/你的用户名" />
+      </div>
+      <div class="form-group full">
+        <label>联系邮箱</label>
+        <input type="email" id="f-email" placeholder="hello@example.com" />
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="saveAll()">💾 保存并生成更新指令</button>
+    </div>
+  </div>
+
+  <!-- ⑤ 文章管理 -->
+  <div class="panel" id="panel-posts">
+    <div class="panel-header">
+      <h2>📝 文章管理</h2>
+      <p>文章通过 Markdown 文件管理。博客文章存放目录：<code>src/content/blog/</code></p>
+    </div>
+    <div class="info-card">
+      <strong>📚 文章管理方式</strong><br><br>
+      · <strong>发布新文章</strong>：在 <code>src/content/blog/</code> 目录创建 <code>.md</code> 文件<br>
+      · <strong>编辑文章</code>：修改对应 Markdown 文件，push 后自动部署<br>
+      · <strong>文章格式</code>：每篇文章头部需要包含 Frontmatter 元信息<br><br>
+      <strong>Frontmatter 示例：</strong><br>
+      <code>---\ntitle: "文章标题"\ndescription: "文章描述"\npubDate: "2026-03-26"\ntags: ["标签1", "标签2"]\n---</code><br><br>
+      · 所有文章会自动出现在博客列表和 RSS 订阅中
+    </div>
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="location.href='/blog'">📖 查看文章列表</button>
+    </div>
+  </div>
+
+  <!-- ⑥ 部署状态 -->
+  <div class="panel" id="panel-deploy">
+    <div class="panel-header">
+      <h2>🚀 部署状态</h2>
+      <p>查看博客的当前部署状态，以及如何触发重新部署。</p>
+    </div>
+    <div class="info-card" style="margin-bottom: 1rem">
+      <strong>🌐 当前博客地址</strong><br>
+      · 首页：<a href="https://6661993.xyz" target="_blank">https://6661993.xyz</a><br>
+      · 最新文章：<a href="/blog/06-openclaw-cluster-node-guide/" target="_blank">点击查看</a><br><br>
+      <strong>⚙️ 自动部署说明</strong><br>
+      博客使用 GitHub Actions 实现自动化部署。每次向 <code>main</code> 分支 push 代码时：<br>
+      1. GitHub Actions 自动执行 <code>npm run build</code><br>
+      2. 构建完成后，通过 Webhook 触发 VM 自动拉取最新代码<br>
+      3. PM2 自动重启 Astro 服务<br><br>
+      <strong>💡 手动触发部署</strong><br>
+      在 Telegram 中发送 <code>/blog</code> 或直接对我说"帮我重新部署博客"即可。
+    </div>
+    <div class="actions">
+      <button class="btn btn-git" onclick="toast('✅ 博客已就绪！如有需要请说「帮我重新部署博客」')">🔄 博客运行正常</button>
+    </div>
+  </div>
+
+  <!-- Diff Output -->
+  <div id="diff-output" style="display:none; margin-top: 1.5rem">
+    <div class="panel">
+      <div class="panel-header">
+        <h2>📋 配置变更预览</h2>
+        <p>以下是建议提交的配置变更内容。将这些内容告诉我，我来帮你自动完成更新和部署。</p>
+      </div>
+      <div class="diff-view" id="diff-content"></div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="copyDiff()">📋 复制变更内容</button>
+        <button class="btn btn-git" onclick="requestAutoCommit()">🤖 让 AI 自动提交部署</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── Data ──────────────────────────────────
+  let siteConfig = {};
+  let navConfig = { links: [] };
+  let pendingChanges = {};
+
+  // ── Init ──────────────────────────────────
+  async function loadAll() {
+    await Promise.all([loadConfig(), loadNav()]);
+  }
+
+  async function loadConfig() {
+    try {
+      const r = await fetch('https://raw.githubusercontent.com/boqin-87/openclaw-node/main/src/data/siteConfig.json');
+      siteConfig = await r.json();
+      applyToForm();
+    } catch(e) {
+      // fallback to default
+      siteConfig = { title: '白小 · 技术杂记', description: '记录折腾、网络、开发与效率工具。', author: '白小', siteUrl: 'https://6661993.xyz', github: '', twitter: '', email: '', theme: { primaryColor: '#4f46e5', accentColor: '#f59e0b' } };
+      applyToForm();
+    }
+  }
+
+  async function loadNav() {
+    try {
+      const r = await fetch('https://raw.githubusercontent.com/boqin-87/openclaw-node/main/src/data/navLinks.json');
+      navConfig = await r.json();
+      renderNav();
+    } catch(e) {
+      navConfig = { links: [{ label: '首页', href: '/', icon: '🏠' }, { label: '文章', href: '/blog', icon: '📚' }, { label: '关于', href: '/about', icon: '👤' }] };
+      renderNav();
+    }
+  }
+
+  function applyToForm() {
+    document.getElementById('f-title').value = siteConfig.title || '';
+    document.getElementById('f-desc').value = siteConfig.description || '';
+    document.getElementById('f-author').value = siteConfig.author || '';
+    document.getElementById('f-url').value = siteConfig.siteUrl || '';
+    document.getElementById('f-github').value = siteConfig.github || '';
+    document.getElementById('f-twitter').value = siteConfig.twitter || '';
+    document.getElementById('f-email').value = siteConfig.email || '';
+    if (siteConfig.theme) {
+      document.getElementById('f-primary').value = siteConfig.theme.primaryColor || '#4f46e5';
+      document.getElementById('f-primary-text').value = siteConfig.theme.primaryColor || '#4f46e5';
+      document.getElementById('f-accent').value = siteConfig.theme.accentColor || '#f59e0b';
+      document.getElementById('f-accent-text').value = siteConfig.theme.accentColor || '#f59e0b';
+      updatePreview();
+    }
+  }
+
+  function renderNav() {
+    const el = document.getElementById('nav-editor');
+    el.innerHTML = '';
+    navConfig.links.forEach((l, i) => {
+      const div = document.createElement('div');
+      div.className = 'nav-row';
+      div.innerHTML = `<input type="text" value="${l.icon||'📄'}" data-idx="${i}" class="ni-icon" placeholder="emoji" />
+        <input type="text" value="${l.label}" data-idx="${i}" class="ni-label" placeholder="显示名称" />
+        <input type="text" value="${l.href}" data-idx="${i}" class="ni-href" placeholder="/路径" />
+        <button class="del-btn" onclick="delNav(${i})" title="删除">×</button>`;
+      el.appendChild(div);
+    });
+  }
+
+  // ── Save ──────────────────────────────────
+  function buildConfigFromForm() {
+    return {
+      title: document.getElementById('f-title').value,
+      description: document.getElementById('f-desc').value,
+      author: document.getElementById('f-author').value,
+      siteUrl: document.getElementById('f-url').value,
+      github: document.getElementById('f-github').value,
+      twitter: document.getElementById('f-twitter').value,
+      email: document.getElementById('f-email').value,
+      theme: {
+        primaryColor: document.getElementById('f-primary-text').value || document.getElementById('f-primary').value,
+        accentColor: document.getElementById('f-accent-text').value || document.getElementById('f-accent').value,
+      }
+    };
+  }
+
+  function buildNavFromForm() {
+    const rows = document.querySelectorAll('.nav-row');
+    return {
+      links: Array.from(rows).map((row, i) => ({
+        label: row.querySelector('.ni-label').value,
+        href: row.querySelector('.ni-href').value,
+        icon: row.querySelector('.ni-icon').value,
+      }))
+    };
+  }
+
+  function saveAll() {
+    const newCfg = buildConfigFromForm();
+    const diff = diffObjects(siteConfig, newCfg);
+    if (Object.keys(diff).length === 0) {
+      toast('⚠️ 没有检测到任何变更', 'warn');
+      return;
+    }
+    pendingChanges.siteConfig = newCfg;
+    siteConfig = newCfg;
+    showDiff(diff, 'siteConfig.json', JSON.stringify(newCfg, null, 2));
+  }
+
+  function saveNav() {
+    const newNav = buildNavFromForm();
+    const diff = diffObjects(navConfig, newNav);
+    if (Object.keys(diff).length === 0) {
+      toast('⚠️ 导航没有变更', 'warn');
+      return;
+    }
+    pendingChanges.navLinks = newNav;
+    navConfig = newNav;
+    renderNav();
+    showDiff(diff, 'navLinks.json', JSON.stringify(newNav, null, 2));
+  }
+
+  function delNav(idx) {
+    navConfig.links.splice(idx, 1);
+    renderNav();
+    toast('已删除，可点击"保存"确认变更', 'warn');
+  }
+
+  function addNavRow() {
+    navConfig.links.push({ label: '新页面', href: '/new', icon: '📄' });
+    renderNav();
+  }
+
+  // ── Diff ──────────────────────────────────
+  function diffObjects(oldObj, newObj) {
+    const changes = {};
+    for (const k in newObj) {
+      if (JSON.stringify(oldObj[k]) !== JSON.stringify(newObj[k])) {
+        changes[k] = { from: oldObj[k], to: newObj[k] };
+      }
+    }
+    return changes;
+  }
+
+  function showDiff(changes, filename, newContent) {
+    const lines = [`📄 **${filename}**\n`, '```json', newContent, '```'];
+    document.getElementById('diff-content').textContent = lines.join('\n');
+    document.getElementById('diff-output').style.display = 'block';
+    document.getElementById('diff-output').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    toast('✅ 变更已生成！复制内容或让 AI 自动处理');
+  }
+
+  function copyDiff() {
+    const text = document.getElementById('diff-content').textContent;
+    navigator.clipboard.writeText(text).then(() => toast('📋 已复制到剪贴板！'));
+  }
+
+  function requestAutoCommit() {
+    const msg = `请帮我更新博客配置：\n\n将 <code>src/data/siteConfig.json</code> 和 <code>src/data/navLinks.json</code> 的内容更新为最新配置，然后 git push 触发自动部署。\n\n最新配置：\n${JSON.stringify(pendingChanges, null, 2)}`;
+    toast('🤖 正在打开 AI 对话...请发送上述内容给我！', 'warn');
+    // Store pending changes for retrieval
+    sessionStorage.setItem('pendingBlogConfig', JSON.stringify(pendingChanges));
+  }
+
+  // ── Theme Preview ──────────────────────────
+  function syncColor(type) {
+    const color = document.getElementById('f-' + type).value;
+    document.getElementById('f-' + type + '-text').value = color;
+    updatePreview();
+  }
+
+  function updatePreview() {
+    const p = document.getElementById('f-primary-text').value || '#4f46e5';
+    const a = document.getElementById('f-accent-text').value || '#f59e0b';
+    document.documentElement.style.setProperty('--p', p);
+    document.documentElement.style.setProperty('--a', a);
+    const hero = document.getElementById('prev-hero');
+    if (hero) hero.style.background = `linear-gradient(135deg, ${p}, ${a})`;
+    document.getElementById('prev-title').textContent = document.getElementById('f-title').value || '白小 · 技术杂记';
+  }
+
+  // ── UI Helpers ────────────────────────────
+  function switchTab(btn, name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+  }
+
+  function toast(msg, type = 'ok') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast' + (type !== 'ok' ? ' ' + type : '');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3500);
+  }
+
+  // Auto-load on mount
+  loadAll();
+</script>
+</body>
+</html>

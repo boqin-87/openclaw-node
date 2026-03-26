@@ -1,0 +1,7 @@
+{
+  "links": [
+    { "label": "首页", "href": "/", "icon": "🏠" },
+    { "label": "文章", "href": "/blog", "icon": "📚" },
+    { "label": "关于", "href": "/about", "icon": "👤" }
+  ]
+}
