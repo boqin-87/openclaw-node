@@ -242,26 +242,21 @@
     </div>
   </div>
 
-  <!-- Diff Output -->
-  <div id="diff-output" style="display:none; margin-top: 1.5rem">
-    <div class="panel">
-      <div class="panel-header">
-        <h2>📋 配置变更预览</h2>
-        <p>以下是建议提交的配置变更内容。将这些内容告诉我，我来帮你自动完成更新和部署。</p>
-      </div>
-      <div class="diff-view" id="diff-content"></div>
-      <div class="actions">
-        <button class="btn btn-primary" onclick="copyDiff()">📋 复制变更内容</button>
-        <button class="btn btn-git" onclick="requestAutoCommit()">🤖 让 AI 自动提交部署</button>
+    <!-- Diff Output (Hidden) -->
+    <div id="diff-output" style="display:none; margin-top: 1.5rem">
+      <div class="panel">
+        <div class="panel-header">
+          <h2>📋 配置保存状态</h2>
+          <p id="save-status-msg">配置正在保存中，请稍候...</p>
+        </div>
       </div>
     </div>
-  </div>
 
 </div>
 
 <div class="toast" id="toast"></div>
 
-<script>
+<script is:inline>
   // ── Data ──────────────────────────────────
   let siteConfig = {};
   let navConfig = { links: [] };
@@ -354,40 +349,68 @@
     };
   }
 
-  function saveAll() {
+  async function saveAll() {
     const newCfg = buildConfigFromForm();
     const diff = diffObjects(siteConfig, newCfg);
     if (Object.keys(diff).length === 0) {
       toast('⚠️ 没有检测到任何变更', 'warn');
       return;
     }
-    pendingChanges.siteConfig = newCfg;
+    await commitChanges({ siteConfig: newCfg }, '基础设置');
     siteConfig = newCfg;
-    showDiff(diff, 'siteConfig.json', JSON.stringify(newCfg, null, 2));
   }
 
-  function saveNav() {
+  async function saveNav() {
     const newNav = buildNavFromForm();
     const diff = diffObjects(navConfig, newNav);
     if (Object.keys(diff).length === 0) {
       toast('⚠️ 导航没有变更', 'warn');
       return;
     }
-    pendingChanges.navLinks = newNav;
+    await commitChanges({ navLinks: newNav }, '导航菜单');
     navConfig = newNav;
     renderNav();
-    showDiff(diff, 'navLinks.json', JSON.stringify(newNav, null, 2));
   }
 
   function delNav(idx) {
     navConfig.links.splice(idx, 1);
     renderNav();
-    toast('已删除，可点击"保存"确认变更', 'warn');
+    toast('已删除，请点击"保存"使变更生效', 'warn');
   }
 
   function addNavRow() {
     navConfig.links.push({ label: '新页面', href: '/new', icon: '📄' });
     renderNav();
+  }
+
+  async function commitChanges(payload, typeName) {
+    const statusMsg = document.getElementById('save-status-msg');
+    document.getElementById('diff-output').style.display = 'block';
+    statusMsg.innerHTML = `正在保存<strong>${typeName}</strong>配置并推送到代码库，请稍候...`;
+    
+    try {
+      // 通过公网域名或本地 IP 调用 Webhook 服务
+      const apiUrl = location.hostname === 'localhost' || location.hostname.startsWith('192.168') 
+        ? `http://${location.hostname}:20080/webhook/save`
+        : 'https://webhook.6661993.xyz/webhook/save';
+        
+      const r = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      const res = await r.json();
+      if (res.ok) {
+        statusMsg.innerHTML = `<span style="color:#16a34a">✅ 保存成功！修改已推送到 GitHub，博客正在自动重新部署中... 大约 30 秒后刷新网页即可看到效果。</span>`;
+        toast('🎉 保存并触发部署成功！');
+      } else {
+        throw new Error(res.error || '保存失败');
+      }
+    } catch(e) {
+      statusMsg.innerHTML = `<span style="color:#dc2626">❌ 保存失败: ${e.message}</span><br>如果通过公网访问，请确保已将 webhook.6661993.xyz 解析到 Cloudflare Tunnel。`;
+      toast('❌ 保存出错，请检查连接', 'warn');
+    }
   }
 
   // ── Diff ──────────────────────────────────
@@ -399,26 +422,6 @@
       }
     }
     return changes;
-  }
-
-  function showDiff(changes, filename, newContent) {
-    const lines = [`📄 **${filename}**\n`, '```json', newContent, '```'];
-    document.getElementById('diff-content').textContent = lines.join('\n');
-    document.getElementById('diff-output').style.display = 'block';
-    document.getElementById('diff-output').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    toast('✅ 变更已生成！复制内容或让 AI 自动处理');
-  }
-
-  function copyDiff() {
-    const text = document.getElementById('diff-content').textContent;
-    navigator.clipboard.writeText(text).then(() => toast('📋 已复制到剪贴板！'));
-  }
-
-  function requestAutoCommit() {
-    const msg = `请帮我更新博客配置：\n\n将 <code>src/data/siteConfig.json</code> 和 <code>src/data/navLinks.json</code> 的内容更新为最新配置，然后 git push 触发自动部署。\n\n最新配置：\n${JSON.stringify(pendingChanges, null, 2)}`;
-    toast('🤖 正在打开 AI 对话...请发送上述内容给我！', 'warn');
-    // Store pending changes for retrieval
-    sessionStorage.setItem('pendingBlogConfig', JSON.stringify(pendingChanges));
   }
 
   // ── Theme Preview ──────────────────────────
